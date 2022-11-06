@@ -2,3 +2,5 @@ node_modules
 .prettierrc
 .vscode
 .cache
+# for now I prefer ci/static site server to build
+dist
