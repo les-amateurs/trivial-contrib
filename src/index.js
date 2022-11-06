@@ -232,6 +232,7 @@
 
   let searchParams = new URLSearchParams(location.search);
   let lastParam = searchParams.get("page") ?? searchParams.get("problems");
+  let requestedSeed = searchParams.get("seed") ?? (Math.floor(Math.random() * 10000000));
   let testInfo = {
     testYear: searchParams.get("testyear"),
     testName: searchParams.get("testname"),
