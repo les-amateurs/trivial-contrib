@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import 'regenerator-runtime/runtime'
+// import 'regenerator-runtime/runtime'
 
  (() => {
   let allPages = [];
@@ -107,6 +107,8 @@ import 'regenerator-runtime/runtime'
           <label class="checkbox-label">Hide question sources</label>
         </div>
       </div>
+      <input class="input-field"
+        id="input-seed" type="text" placeholder="Custom RNG Seed. "/>
     </div>
   </div>`;
   let yearOption = `<div class="input-container input-flex-full">
@@ -224,6 +226,11 @@ import 'regenerator-runtime/runtime'
       </li>
     <ul>
   </div>`;
+  function generateSeed(){
+    // TODO: Better func
+    // random 0 to 1 number then remove decimal yes
+    return Math.random().toString().replace(".","");
+  }
   let printLinks = false;
   let clickedTimes = 0;
   let answerTimes = 0;
@@ -235,7 +242,7 @@ import 'regenerator-runtime/runtime'
 
   let searchParams = new URLSearchParams(location.search);
   let lastParam = searchParams.get("page") ?? searchParams.get("problems");
-  let requestedSeed = searchParams.get("seed") ?? (Math.floor(Math.random() * 10000000));
+  let requestedSeed = searchParams.get("seed") ?? (generateSeed());
   let testInfo = {
     testYear: searchParams.get("testyear"),
     testName: searchParams.get("testname"),
@@ -437,7 +444,7 @@ import 'regenerator-runtime/runtime'
       <h2 class="section-header" id="batch-header">Problem Set - ${new Date().toLocaleString(
         "en-UK",
         { year: "numeric", month: "short", day: "numeric" }
-      )}</h2>
+      )} Seed: ${requestedSeed}</h2>
       <div class="article-text" id="batch-text"></div>
     </div>
     <div class="problem-section section-collapsed" id="solutions-section">
@@ -473,7 +480,7 @@ import 'regenerator-runtime/runtime'
         <h2 class="section-header" id="batch-header">Problem Set - ${new Date().toLocaleString(
           "en-UK",
           { year: "numeric", month: "short", day: "numeric" }
-        )}</h2>
+        )} Seed: ${requestedSeed}</h2>
         <div class="article-text" id="batch-text"></div>
       </div>
       <div class="problem-section section-collapsed" id="solutions-section">
@@ -482,6 +489,7 @@ import 'regenerator-runtime/runtime'
       </div>
       ${displaySettingsText}`
     );
+    $("#input-seed").val(requestedSeed);
 
     if (JSON.parse(localStorage.getItem("countersHidden"))) {
       $("#counter-toggle").text("Counters off");
@@ -1182,6 +1190,7 @@ import 'regenerator-runtime/runtime'
     }
 
     if (subjects.includes("(All Subjects)")) {
+      console.log("Using all subjects");
       for (let problem of allProblems) {
         if (
           matchesOptions(problem, tests, yearsFrom, yearsTo, diffFrom, diffTo)
@@ -2000,6 +2009,7 @@ import 'regenerator-runtime/runtime'
       ${moreOptions}
       ${notes}`
     );
+    $("#input-seed").val(requestedSeed);
     $("#sort-container").remove();
     $("#input-hide").prop("checked", true);
     if (optionsUncollapsed)
@@ -2055,6 +2065,7 @@ import 'regenerator-runtime/runtime'
       ${moreOptions}
       ${notes}`
     );
+    $("#input-seed").val(requestedSeed);
     if (optionsUncollapsed)
       $(".options-container").removeClass("text-collapsed");
     collapseText();
@@ -2099,6 +2110,7 @@ import 'regenerator-runtime/runtime'
       ${difficultyChart}
       ${notes}`
     );
+    $("#input-seed").val(requestedSeed);
     if (optionsUncollapsed)
       $(".options-container").removeClass("text-collapsed");
     $("#more-options").append(`${yearFullOption}
@@ -2269,10 +2281,16 @@ import 'regenerator-runtime/runtime'
   });
 
   $(".page-container").on("click", "#random-button", async () => {
+
+    requestedSeed = generateSeed();
+    let srandom = seedrandom(requestedSeed);
+
     clickedTimes++;
     let clickedTimesThen = clickedTimes;
     answerTimes = 0;
     clearProblem();
+
+
 
     let pages = await getPages();
     console.log(`${pages.length} total problems retrieved.`);
@@ -2296,7 +2314,7 @@ import 'regenerator-runtime/runtime'
       ) {
         clearProblem();
 
-        let randomPage = pages[Math.floor(Math.random() * pages.length)];
+        let randomPage = pages[Math.floor(srandom() * pages.length)];
         console.log(randomPage);
         if (clickedTimes === clickedTimesThen + answerTimes)
           response = await addProblem(randomPage, true);
@@ -2492,6 +2510,7 @@ import 'regenerator-runtime/runtime'
         let name = $("#input-name").val()
           ? sanitize($("#input-name").val())
           : sanitize(`${$("#input-singleyear").val()} ${fullTest}`);
+        // name += " (seed: " + sanitize(requestedSeed) + ")";
         $("#batch-header").html(name);
         document.title = name + " - Trivial Math Practice";
 
