@@ -229,7 +229,10 @@
   function generateSeed(){
     // TODO: Better func
     // random 0 to 1 number then remove decimal yes
-    return Math.random().toString().replace(".","");
+    Math.seedrandom();
+    let newSeed = Math.random().toString().replace(".","");
+    console.log("New Seed generated",newSeed);
+    return newSeed;
   }
   let printLinks = false;
   let clickedTimes = 0;
@@ -243,6 +246,7 @@
   let searchParams = new URLSearchParams(location.search);
   let lastParam = searchParams.get("page") ?? searchParams.get("problems");
   let requestedSeed = searchParams.get("seed") ?? (generateSeed());
+  Math.seedrandom(requestedSeed);
   let testInfo = {
     testYear: searchParams.get("testyear"),
     testName: searchParams.get("testname"),
@@ -1619,13 +1623,17 @@
           data-clipboard-text="${problemList}" title="This list can be copied into ` +
         `fields for multiple problems, such as making a custom Problem Set.">
           Copy problem list
-        </button> ⋅ <button class="text-button section-button" tabindex="0"
+        </button> ⋅ <button class="text-button section-button" id="copy-seed"
+        data-clipboard-text="${sanitize(requestedSeed)}" title="A unique combination of numbers and characters identifying this problem set given this configuration.">
+        Copy Seed
+      </button> ⋅ <button class="text-button section-button" tabindex="0"
         onclick="window.print()">
           Print this page
         </button>
       </div>`
     );
     new ClipboardJS("#copy-problems");
+    new ClipboardJS("#copy-seed");
 
     for (let [index, problem] of problems.entries()) {
       $("#batch-text").append(`<div class="article-problem"
@@ -2283,7 +2291,7 @@
   $(".page-container").on("click", "#random-button", async () => {
 
     requestedSeed = generateSeed();
-    let srandom = seedrandom(requestedSeed);
+    Math.seedrandom(requestedSeed);
 
     clickedTimes++;
     let clickedTimesThen = clickedTimes;
@@ -2314,7 +2322,7 @@
       ) {
         clearProblem();
 
-        let randomPage = pages[Math.floor(srandom() * pages.length)];
+        let randomPage = pages[Math.floor(Math.random() * pages.length)];
         console.log(randomPage);
         if (clickedTimes === clickedTimesThen + answerTimes)
           response = await addProblem(randomPage, true);
@@ -2732,6 +2740,9 @@
         .split(",")
         .map((e) => e.replace("#", "Problems/Problem "));
 
+      requestedSeed = generateSeed();
+      Math.seedrandom(requestedSeed);
+
       let apiEndpoint = "https://artofproblemsolving.com/wiki/api.php";
       let params;
       let response;
@@ -2997,7 +3008,7 @@
     history.pushState(
       { problems: problems.map((e) => underscores(e.title)).join("|") },
       name + " - Trivial Math Practice",
-      "?problems=" + problems.map((e) => underscores(e.title)).join("|")
+      "?problems=" + problems.map((e) => underscores(e.title)).join("|") + "&seed=" + encodeURIComponent(requestedSeed)
     );
     searchParams = new URLSearchParams(location.search);
     lastParam = searchParams.get("problems");
